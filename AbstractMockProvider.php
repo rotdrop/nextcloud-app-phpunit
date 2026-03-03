@@ -35,7 +35,7 @@ use OC\Session\Memory as MemorySession;
 use Pimple\Container as InnerContainer;
 
 use OCP\AppFramework\App;
-use OCP\AppFramework\IAppContainer;
+use Psr\Container\ContainerInterface;
 use OCP\Authentication\LoginCredentials\ICredentials as ILoginCredentials;
 use OCP\Authentication\LoginCredentials\IStore as ICredentialsStore;
 use OCP\IConfig;
@@ -607,7 +607,7 @@ abstract class AbstractMockProvider
       return $this->instances[$className];
     }
 
-    $instance = $this->createStub(IAppContainer::class);
+    $instance = $this->createStub(ContainerInterface::class);
 
     $instance->method('get')->willReturnCallback(
       function(string $service) {
