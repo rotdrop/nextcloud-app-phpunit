@@ -33,6 +33,10 @@ use Doctrine\DBAL\Connection as DatabaseConnection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 
+use Doctrine\DBAL\Connection as DatabaseConnection;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Tools\DsnParser;
+
 use OCP\ITempManager;
 use Psr\Log\LoggerInterface;
 
