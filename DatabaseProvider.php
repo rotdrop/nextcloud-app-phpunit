@@ -29,6 +29,10 @@ use RuntimeException;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception as ProcessExceptions;
 
+use Doctrine\DBAL\Connection as DatabaseConnection;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Tools\DsnParser;
+
 use OCP\ITempManager;
 use Psr\Log\LoggerInterface;
 
@@ -293,6 +297,25 @@ FLUSH PRIVILEGES;
       databasePassword: self::DATABASE_PASSWORD,
     );
     return $this->databaseConfig;
+  }
+
+  /**
+   * @param EnumDatabasePurpose $which
+   *
+   * @return DatabaseConnection
+   *
+   * @throws RuntimeException
+   */
+  public function getConnection(EnumDatabasePurpose $which = EnumDatabasePurpose::APP): DatabaseConnection
+  {
+    $config = $this->getDatabaseConfig();
+    if ($config === null) {
+      throw new RuntimeException('The database is not configured yet.');
+    }
+    $dsnParser = new DsnParser();
+    $connectionParams = $dsnParser->parse($config->databaseServer);
+    $connectionParams['dbname'] = $this->databaseName($which);
+    return DriverManager::getConnection($connectionParams);
   }
 
   /**
