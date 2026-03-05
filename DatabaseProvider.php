@@ -27,7 +27,7 @@ namespace OCA\RotDrop\Tests;
 use RuntimeException;
 
 use Symfony\Component\Process\Process;
-use Symfony\Component\Process\Exception as ProcessExceptions;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 use Doctrine\DBAL\Connection as DatabaseConnection;
 use Doctrine\DBAL\DriverManager;
@@ -272,6 +272,9 @@ FLUSH PRIVILEGES;
       $this->databaseName($which),
     ]);
     $process->setInput($sql)->run();
+    if (!$process->isSuccessful()) {
+      throw new ProcessFailedException($process);
+    }
   }
 
   /**
