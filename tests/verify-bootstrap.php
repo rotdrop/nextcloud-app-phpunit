@@ -106,8 +106,23 @@ namespace {
 
   $appNamespace = $argv[1] ?? '';
   $firstHelper = $argv[2] ?? 'DatabaseProvider';
+  $loadMode = $argv[3] ?? 'direct';
   if (!in_array($firstHelper, ['DatabaseProvider', 'DatabaseConfig'], true)) {
     throw new \InvalidArgumentException('Expected DatabaseProvider or DatabaseConfig as the second argument.');
+  }
+  if (!in_array($loadMode, ['direct', 'composer', 'explicit'], true)) {
+    throw new \InvalidArgumentException('Expected direct, composer, or explicit as the third argument.');
+  }
+  if ($loadMode !== 'direct') {
+    $loader = require __DIR__ . '/../vendor/autoload.php';
+    check(!defined('PHPUNIT_NC_APP_NAMESPACE'), 'Composer must load before the app constants.');
+    check(!class_exists(\OCA\RotDrop\Tests\Toolkit\Service\ExecutableFinder::class), 'Composer must not eagerly bootstrap toolkit aliases.');
+    foreach (['AbstractMockProvider', 'DatabaseConfig', 'DatabaseProvider', 'DeprecationException', 'EnumConfigSection', 'EnumDatabasePurpose', 'Logger'] as $helper) {
+      $file = $loader->findFile('OCA\\RotDrop\\Tests\\' . $helper);
+      check($file !== false && realpath($file) === realpath(__DIR__ . '/../src/' . $helper . '.php'), 'Composer must locate ' . $helper . ' via PSR-4.');
+    }
+    check(\OCA\RotDrop\Tests\EnumDatabasePurpose::APP->value === 'app', 'Enums must autoload without Nextcloud.');
+    check(new \OCA\RotDrop\Tests\DeprecationException instanceof \Exception, 'Exceptions must autoload without Nextcloud.');
   }
   if ($appNamespace !== 'missing-namespace') {
     define('PHPUNIT_NC_APP_NAMESPACE', $appNamespace);
@@ -130,7 +145,14 @@ namespace {
   });
 
   try {
-    require __DIR__ . '/../' . $firstHelper . '.php';
+    if ($loadMode === 'explicit') {
+      require_once __DIR__ . '/../bootstrap.php';
+    }
+    if ($loadMode === 'direct') {
+      require __DIR__ . '/../src/' . $firstHelper . '.php';
+    } else {
+      check(class_exists('OCA\\RotDrop\\Tests\\' . $firstHelper), 'Composer must autoload the first helper.');
+    }
   } catch (\LogicException $exception) {
     if ($appNamespace === 'missing-namespace' || $appNamespace === '') {
       check(str_contains($exception->getMessage(), 'Define PHPUNIT_NC_APP_NAMESPACE'), 'Missing namespace diagnostic.');
@@ -145,9 +167,14 @@ namespace {
   }
   check(!in_array($appNamespace, ['missing-namespace', 'missing-toolkit', ''], true), 'Invalid setup must fail.');
 
-  require_once __DIR__ . '/../DatabaseProvider.php';
-  require_once __DIR__ . '/../DatabaseConfig.php';
-  require_once __DIR__ . '/../EnumDatabasePurpose.php';
+  if ($loadMode === 'direct') {
+    require_once __DIR__ . '/../src/DatabaseProvider.php';
+    require_once __DIR__ . '/../src/DatabaseConfig.php';
+    require_once __DIR__ . '/../src/EnumDatabasePurpose.php';
+  } else {
+    check(class_exists(\OCA\RotDrop\Tests\DatabaseProvider::class), 'Composer must autoload DatabaseProvider.');
+    check(class_exists(\OCA\RotDrop\Tests\DatabaseConfig::class), 'Composer must autoload DatabaseConfig.');
+  }
   require_once __DIR__ . '/../bootstrap.php';
 
   $finder = new \OCA\RotDrop\Tests\Fixtures\ExecutableFinder;
@@ -183,5 +210,5 @@ namespace {
 
   $otherApp = $appNamespace === 'OCA\\CAFEVDB' ? 'OCA\\CAFeVDBMembers' : 'OCA\\CAFEVDB';
   check(!class_exists($otherApp . '\\Wrapped\\OCA\\RotDrop\\Toolkit\\Service\\ExecutableFinder'), 'The other app must remain unavailable.');
-  echo $appNamespace . ' (' . $firstHelper . ' first): OK' . PHP_EOL;
+  echo $appNamespace . ' (' . $firstHelper . ' first, ' . $loadMode . '): OK' . PHP_EOL;
 }
