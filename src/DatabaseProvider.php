@@ -41,7 +41,7 @@ use OCA\RotDrop\Tests\Logger;
 use OCA\RotDrop\Tests\Toolkit\Service\ExecutableFinder;
 use OCA\RotDrop\Tests\Toolkit\Traits\LoggerTrait;
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../bootstrap.php';
 
 /** Setup a real database server in order to avoid excessive mocking. */
 class DatabaseProvider

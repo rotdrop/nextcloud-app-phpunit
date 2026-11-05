@@ -1,0 +1,32 @@
+{
+  "name": "rotdrop/nextcloud-app-phpunit",
+  "description": "Shared PHPUnit helpers for CafeVDB and CafeVDB Members",
+  "type": "library",
+  "license": "AGPL-3.0-or-later",
+  "require": {
+    "php": "^8.1",
+    "doctrine/dbal": "^4.0",
+    "phpunit/phpunit": "^12.0 || ^13.0",
+    "pimple/pimple": "^3.0",
+    "psr/container": "^1.1 || ^2.0",
+    "psr/log": "^3.0",
+    "symfony/process": "^6.4 || ^7.0 || ^8.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "OCA\\RotDrop\\Tests\\": "src/"
+    }
+  },
+  "scripts": {
+    "test": [
+      "@php tests/verify-bootstrap.php 'OCA\\CAFEVDB' DatabaseProvider composer",
+      "@php tests/verify-bootstrap.php 'OCA\\CAFEVDB' DatabaseConfig composer",
+      "@php tests/verify-bootstrap.php 'OCA\\CAFeVDBMembers' DatabaseProvider composer",
+      "@php tests/verify-bootstrap.php 'OCA\\CAFeVDBMembers' DatabaseConfig composer",
+      "@php tests/verify-bootstrap.php 'OCA\\CAFEVDB' DatabaseProvider explicit",
+      "@php tests/verify-bootstrap.php 'OCA\\CAFeVDBMembers' DatabaseConfig explicit",
+      "@php tests/verify-bootstrap.php missing-namespace DatabaseProvider composer",
+      "@php tests/verify-bootstrap.php missing-toolkit DatabaseConfig composer"
+    ]
+  }
+}
